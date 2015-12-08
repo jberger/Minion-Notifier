@@ -2,15 +2,13 @@ package Minion::Notifier;
 
 use Mojo::Base 'Mojo::EventEmitter';
 
-use Mojo::IOLoop;
-
 has minion => sub { die 'A Minion instance is required' };
 
 has transport => sub { Minion::Notifier::Transport->new };
 
 sub app { shift->minion->app }
 
-sub attach {
+sub setup_worker {
   my $self = shift;
 
   my $dequeue = sub {
@@ -25,15 +23,19 @@ sub attach {
     $worker->on(dequeue => $dequeue);
   });
 
-  #Mojo::IOLoop->next_tick(sub{
-    $self->transport->on(notified => sub {
-      my ($transport, $id, $event) = @_;
-      $self->emit(job => $id, $event);
-      $self->emit("job:$id" => $event);
-      $self->emit($event    => $id);
-    });
-    $self->transport->listen;
-  #});
+  return $self
+}
+
+sub setup_listener {
+  my $self = shift;
+
+  $self->transport->on(notified => sub {
+    my ($transport, $id, $event) = @_;
+    $self->emit(job => $id, $event);
+    $self->emit("job:$id" => $event);
+    $self->emit($event    => $id);
+  });
+  $self->transport->listen;
 
   return $self;
 }
