@@ -12,11 +12,8 @@ plugin Minion => { SQLite => ':temp:' };
 my $minion = app->minion;
 
 use Mercury;
-my $mercury = Mercury->new;
 my $m_ua = Mojo::UserAgent->new;
-my $base = $m_ua->server->app($mercury)->nb_url;
-my $url = $mercury->url_for(bus => topic => 'jobs')->to_abs($base);
-$url->scheme('ws');
+my $url = $m_ua->server->app(Mercury->new)->nb_url->path('/bus/jobs')->scheme('ws');
 plugin 'Minion::Notifier', {transport => $url};
 my $notifier = app->minion_notifier;
 $notifier->transport->ua($m_ua);

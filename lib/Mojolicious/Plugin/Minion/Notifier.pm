@@ -15,8 +15,8 @@ sub register {
   my ($plugin, $app, $config) = @_;
   $config->{minion} ||= eval { $app->minion } || die 'A minion instance is required';
 
-  if ($config->{transport} && ! $config->$isa('Minion::Notifier::Transport')) {
-    if($config->{transport} =~ /^wss?:/) {
+  unless ($config->$isa('Minion::Notifier::Transport')) {
+    if($config->{transport} && $config->{transport} =~ /^wss?:/) {
       require Minion::Notifier::Transport::WebSocket;
       $config->{transport} = Minion::Notifier::Transport::WebSocket->new(url => $config->{transport});
     } elsif ($config->{minion}->backend->isa('Minion::Backend::Pg')) {
