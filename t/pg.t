@@ -3,8 +3,8 @@ BEGIN { $ENV{MOJO_REACTOR} = 'Mojo::Reactor::Poll' }
 use Mojolicious::Lite;
 
 use Test::More;
-plan skip_all => 'set TEST_ONLINE to a postgresql dsn to run test'
-  unless my $url = $ENV{TEST_ONLINE};
+plan skip_all => 'set TEST_ONLINE to a postgresql url to run test'
+  unless my $url = $ENV{TEST_ONLINE_PG};
 
 use Test::Mojo;
 my $t = Test::Mojo->new;
@@ -28,7 +28,7 @@ any '/live' => sub {
     my ($notifier, $id, $message) = @_;
     $c->render(json => {id => $id, message => $message});
   });
-  $minion->perform_jobs; 
+  $minion->perform_jobs;
 };
 
 $t->get_ok('/live')

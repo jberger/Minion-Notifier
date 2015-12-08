@@ -15,10 +15,16 @@ sub register {
   my ($plugin, $app, $config) = @_;
   $config->{minion} ||= eval { $app->minion } || die 'A minion instance is required';
 
-  unless ($config->$isa('Minion::Notifier::Transport')) {
-    if($config->{transport} && $config->{transport} =~ /^wss?:/) {
+  my $transport = $config->{transport} || '';
+  unless ($transport->$isa('Minion::Notifier::Transport')) {
+    if($transport =~ /^wss?:/) {
       require Minion::Notifier::Transport::WebSocket;
-      $config->{transport} = Minion::Notifier::Transport::WebSocket->new(url => $config->{transport});
+      $config->{transport} = Minion::Notifier::Transport::WebSocket->new(url => $transport);
+    } elsif ($transport =~ /^redis:/) {
+      require Mojo::Redis2;
+      require Minion::Notifier::Transport::Redis;
+      my $redis = Mojo::Redis2->new(url => $transport);
+      $config->{transport} = Minion::Notifier::Transport::Redis->new(redis => $redis);
     } elsif ($config->{minion}->backend->isa('Minion::Backend::Pg')) {
       require Minion::Notifier::Transport::Pg;
       $config->{transport} = Minion::Notifier::Transport::Pg->new(pg => $config->{minion}->backend->pg);

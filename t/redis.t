@@ -3,18 +3,17 @@ BEGIN { $ENV{MOJO_REACTOR} = 'Mojo::Reactor::Poll' }
 use Mojolicious::Lite;
 
 use Test::More;
+plan skip_all => 'set TEST_ONLINE to a redis url to run test'
+  unless my $url = $ENV{TEST_ONLINE_REDIS};
+
 use Test::Mojo;
 my $t = Test::Mojo->new;
 
 plugin Minion => { SQLite => ':temp:' };
 my $minion = app->minion;
 
-use Mercury;
-my $m_ua = Mojo::UserAgent->new;
-my $url = $m_ua->server->app(Mercury->new)->nb_url->path('/bus/jobs')->scheme('ws');
 plugin 'Minion::Notifier', {transport => $url};
 my $notifier = app->minion_notifier;
-$notifier->transport->ua($m_ua);
 
 $minion->add_task(live => sub { return 1 });
 $minion->add_task(die  => sub { die 'argh' });
