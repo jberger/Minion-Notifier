@@ -13,12 +13,13 @@ my $minion = app->minion;
 
 use Mercury;
 my $mercury = Mercury->new;
-use Minion::Notifier::Transport::WebSocket;
-my $transport = Minion::Notifier::Transport::WebSocket->new;
-my $url = $transport->ua->server->app($mercury)->nb_url->clone;
-$transport->url($url->path('/bus/jobs'));
-plugin 'Minion::Notifier', {transport => $transport};
+my $m_ua = Mojo::UserAgent->new;
+my $base = $m_ua->server->app($mercury)->nb_url;
+my $url = $mercury->url_for(bus => topic => 'jobs')->to_abs($base);
+$url->scheme('ws');
+plugin 'Minion::Notifier', {transport => $url};
 my $notifier = app->minion_notifier;
+$notifier->transport->ua($m_ua);
 
 $minion->add_task(live => sub { return 1 });
 $minion->add_task(die  => sub { die 'argh' });
@@ -31,7 +32,7 @@ any '/live' => sub {
     my ($notifier, $id, $message) = @_;
     $c->render(json => {id => $id, message => $message});
   });
-  $minion->perform_jobs; 
+  $minion->perform_jobs;
 };
 
 $t->get_ok('/live')

@@ -4,14 +4,25 @@ use Mojo::Base 'Mojolicious::Plugin';
 
 use Minion::Notifier;
 use Mojo::IOLoop;
+use Scalar::Util ();
+
+my $isa = sub {
+  my ($obj, $class) = @_;
+  return $obj && Scalar::Util::blessed($obj) && $obj->isa($class);
+};
 
 sub register {
   my ($plugin, $app, $config) = @_;
   $config->{minion} ||= eval { $app->minion } || die 'A minion instance is required';
 
-  if (!$config->{transport} && $config->{minion}->backend->isa('Minion::Backend::Pg')) {
-    require Minion::Notifier::Transport::Pg;
-    $config->{transport} = Minion::Notifier::Transport::Pg->new(pg => $config->{minion}->backend->pg);
+  if ($config->{transport} && ! $config->$isa('Minion::Notifier::Transport')) {
+    if($config->{transport} =~ /^wss?:/) {
+      require Minion::Notifier::Transport::WebSocket;
+      $config->{transport} = Minion::Notifier::Transport::WebSocket->new(url => $config->{transport});
+    } elsif ($config->{minion}->backend->isa('Minion::Backend::Pg')) {
+      require Minion::Notifier::Transport::Pg;
+      $config->{transport} = Minion::Notifier::Transport::Pg->new(pg => $config->{minion}->backend->pg);
+    }
   }
 
   my $notifier = Minion::Notifier->new($config);
