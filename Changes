@@ -1,5 +1,8 @@
 Revision history for Perl module Minion::Notifier
 
+0.02 2015-12-09
+  - Fix websocket test (require Mercury 0.003 for bus endpoint) (srezic++)
+
 0.01 2015-12-09
   - Initial release
 
