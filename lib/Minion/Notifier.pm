@@ -2,6 +2,9 @@ package Minion::Notifier;
 
 use Mojo::Base 'Mojo::EventEmitter';
 
+our $VERSION = '0.01';
+$VERSION = eval $VERSION;
+
 has minion => sub { die 'A Minion instance is required' };
 
 has transport => sub { Minion::Notifier::Transport->new };
