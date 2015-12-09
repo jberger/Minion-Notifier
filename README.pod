@@ -27,6 +27,8 @@ Minion::Notifier - Notify listeners when a Minion task has completed
 Although L<Minion> is a highly capable job queue, it does not natively have a mechanism to notify listeners when a job has finished or failed.
 L<Minion::Notifier> provides this feature using pluggable L<Transport|Minion::Notifier::Transport> backends.
 Currently supported are L<Postgres|Minion::Notifier::Transport::Pg>, L<Redis|Minion::Notifier::Transport::Redis>, and L<WebSocket|Minion::Notifier::Transport::WebSocket>.
+Postgres support requires L<Mojo::Pg> and Redis requires L<Mojo::Redis2>.
+WebSockets are native to Mojolicious but you need a broker to manage the connections; L<Mercury> is the author's suggested WebSocket message broker.
 
 Note that this is an early release and the mechansim for loading plugins, especially third-party plugins is likely to change.
 
@@ -95,6 +97,23 @@ This is called automatically by L<Mojolicious::Plugin::Minion::Notifier> once th
 Setup the linkages that cause the jobs to send notifications when reaching "finished" or "failed" states.
 This is called automatically by L<Mojolicious::Plugin::Minion::Notifier>.
 
+=head1 FUTURE WORK
+
+=over
+
+=item *
+
+Document all included classes (hey this is a preview release!)
+
+=item *
+
+Improve backend loader mechanism
+
+=item *
+
+Investigate timeout behavior for the various transport backends
+
+=back
 
 =head1 SEE ALSO
 
