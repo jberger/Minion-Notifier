@@ -23,11 +23,10 @@ sub listen {
 
 sub send {
   my ($self, $id, $message) = @_;
-  $self->redis->publish(
-    $self->channel,
-    Mojo::JSON::encode_json([$id, $message]),
-    sub { },
-  );
+  my $payload = Mojo::JSON::encode_json([$id, $message]);
+  Mojo::IOLoop->delay(sub{
+    $self->redis->publish($self->channel, $payload, shift->begin);
+  })->wait;
 }
 
 1;
