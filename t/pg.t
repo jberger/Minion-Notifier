@@ -21,18 +21,28 @@ Mojo::IOLoop->one_tick; # ensure that setup_listener is called
 $minion->add_task(live => sub { return 1 });
 $minion->add_task(die  => sub { die 'argh' });
 
-my $id;
+my ($id, $job, $worker);
+END { $worker->unregister if $worker }
+
 any '/live' => sub {
   my $c = shift;
   my @events;
   $notifier->on(job => sub {
-    my (undef, @args) = @_;
-    push @events, \@args;
-    return unless $args[1] =~ /finished|failed/;
-    $c->render(json => {id => $id, events => \@events});
+    my (undef, $id, $event) = @_;
+    push @events, [$id, $event];
+
+    if ($event eq 'enqueue') {
+      Mojo::IOLoop->next_tick(sub {
+        $worker = $minion->worker->register;
+        $job = $worker->dequeue(0);
+      });
+    } elsif ($event eq 'dequeue') {
+      Mojo::IOLoop->next_tick(sub { $job->perform });
+    } else {
+      $c->render(json => {id => $id, events => \@events});
+    }
   });
   $id = $minion->enqueue('live');
-  $minion->perform_jobs;
 };
 
 $t->get_ok('/live')
@@ -44,7 +54,8 @@ my @expect = (
   [$id => 'dequeue'],
   [$id => 'finished'],
 );
-$t->json_is('/events' => \@expect);
+$t->json_is('/events' => \@expect)
+  ->or(sub{ diag $t->tx->res->body });
 
 done_testing;
 
