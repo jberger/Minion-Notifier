@@ -90,6 +90,7 @@ Postgres support requires L<Mojo::Pg> and Redis requires L<Mojo::Redis2>.
 WebSockets are native to Mojolicious but you need a broker to manage the connections; L<Mercury> is the author's suggested WebSocket message broker.
 
 Note that this is an early release and the mechansim for loading plugins, especially third-party plugins is likely to change.
+Also note that due to the use of messaging buses, the order of events is not guaranteed especially on very fast jobs.
 
 =head1 EVENTS
 
