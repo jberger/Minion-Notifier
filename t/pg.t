@@ -16,6 +16,7 @@ my $minion = app->minion;
 
 plugin 'Minion::Notifier';
 my $notifier = app->minion_notifier;
+Mojo::IOLoop->one_tick; # ensure that setup_listener is called
 
 $minion->add_task(live => sub { return 1 });
 $minion->add_task(die  => sub { die 'argh' });
@@ -23,18 +24,27 @@ $minion->add_task(die  => sub { die 'argh' });
 my $id;
 any '/live' => sub {
   my $c = shift;
-  $id = $minion->enqueue('live');
+  my @events;
   $notifier->on(job => sub {
-    my ($notifier, $id, $message) = @_;
-    $c->render(json => {id => $id, message => $message});
+    my (undef, @args) = @_;
+    push @events, \@args;
+    return unless $args[1] =~ /finished|failed/;
+    $c->render(json => {id => $id, events => \@events});
   });
+  $id = $minion->enqueue('live');
   $minion->perform_jobs;
 };
 
 $t->get_ok('/live')
   ->status_is(200)
-  ->json_is('/id' => $id)
-  ->json_is('/message' => 'finished');
+  ->json_is('/id' => $id);
+
+my @expect = (
+  [$id => 'enqueue'],
+  [$id => 'dequeue'],
+  [$id => 'finished'],
+);
+$t->json_is('/events' => \@expect);
 
 done_testing;
 

@@ -1,5 +1,9 @@
 Revision history for Perl module Minion::Notifier
 
+0.05 2016-04-10
+  - Emit events related to enqueuing and dequeuing of jobs
+  - Bump Minion dependency to 5.03
+
 0.04 2016-01-04
   - Allow redis notifier to wait for the nonblocking publish to be sent
 

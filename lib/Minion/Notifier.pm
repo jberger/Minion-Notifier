@@ -2,7 +2,7 @@ package Minion::Notifier;
 
 use Mojo::Base 'Mojo::EventEmitter';
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 $VERSION = eval $VERSION;
 
 has minion => sub { die 'A Minion instance is required' };
@@ -11,15 +11,26 @@ has transport => sub { Minion::Notifier::Transport->new };
 
 sub app { shift->minion->app }
 
+sub emit_event {
+  my ($self, $id, $event) = @_;
+  $self->emit(job => $id, $event);
+  $self->emit("job:$id" => $id, $event);
+  $self->emit($event    => $id);
+}
+
 sub setup_listener {
   my $self = shift;
 
+  $self->minion->on(enqueue => sub {
+    my ($minion, $id) = @_;
+    $self->emit_event($id, 'enqueue');
+  });
+
   $self->transport->on(notified => sub {
     my ($transport, $id, $event) = @_;
-    $self->emit(job => $id, $event);
-    $self->emit("job:$id" => $id, $event);
-    $self->emit($event    => $id);
+    $self->emit_event($id, $event);
   });
+
   $self->transport->listen;
 
   return $self;
@@ -31,6 +42,7 @@ sub setup_worker {
   my $dequeue = sub {
     my ($worker, $job) = @_;
     my $id = $job->id;
+    $self->transport->send($id, 'dequeue');
     $job->on(finished => sub { $self->transport->send($id, 'finished') });
     $job->on(failed   => sub { $self->transport->send($id, 'failed') });
   };
@@ -83,34 +95,52 @@ Note that this is an early release and the mechansim for loading plugins, especi
 
 L<Minion::Notifier> inherits all events from L<Mojo::EventEmitter> and emits the following new ones.
 
+=head2 enqueue
+
+  $notifier->on(finished => sub { my ($notifier, $job_id) = @_; ... });
+
+Emitted whenever any job is enqueued (typically having a state of "inactive").
+Note that the event is not repeated as an argument, though this is subject to change.
+
+=head2 dequeue
+
+  $notifier->on(finished => sub { my ($notifier, $job_id) = @_; ... });
+
+Emitted whenever any job is dequeued for processing (typically having a state of "active").
+Note that the event is not repeated as an argument, though this is subject to change.
+
 =head2 job
 
-  $notifier->on(job => sub { my ($notifier, $job_id, $message) = @_; ... });
+  $notifier->on(job => sub { my ($notifier, $job_id, $event) = @_; ... });
 
-Emitted on any message from the backend for all jobs.
-Currently the message is the final status, ie. "finished" or "failed", though this may change.
+Emitted on any event from the backend for all jobs.
+The events are currently "enqueue", "dequeue", "finished", and "failed".
 
 =head2 job:$id
 
-  $notifier->on("job:1234" => sub { my ($notifier, $job_id, $message) = @_; ... });
+  $notifier->on("job:1234" => sub { my ($notifier, $job_id, $event) = @_; ... });
 
 Emitted on any message from the backend for specific jobs.
 Note that the id is still passed so that you may reuse callbacks if desired.
-Currently the message is the final status, ie. "finished" or "failed", though this may change.
+The events are currently "enqueue", "dequeue", "finished", and "failed".
+
+Users of this event are encouraged to carefully consider what race conditions may exist in the act of subscribing to it.
+For example, C<Minion::enqueue> will emit the "enqueue" event before it even returns the job's id.
+For this reason, this event is discouraged and may be deprecated/removed in a future release.
 
 =head2 finished
 
   $notifier->on(finished => sub { my ($notifier, $job_id) = @_; ... });
 
 Emitted whenever any job reaches a state of "finished".
-Since the above messages are simply the statuses, the status is not repeated as an argument, though this is subject to change.
+Note that the event is not repeated as an argument, though this is subject to change.
 
 =head2 failed
 
   $notifier->on(failed => sub { my ($notifier, $job_id) = @_; ... });
 
 Emitted whenever any job reaches a state of "failed".
-Since the above messages are simply the statuses, the status is not repeated as an argument, though this is subject to change.
+Note that the event is not repeated as an argument, though this is subject to change.
 
 =head1 ATTRIBUTES
 
@@ -133,6 +163,10 @@ L<Minion::Notifier> inherits all of the methods from L<Mojo::EventEmitter> and i
 =head2 app
 
 A shortcut for C<< $notifier->minion->app >>.
+
+=head2 emit_event
+
+A low level method used to emit the batch of events related to received minion events.
 
 =head2 setup_listener
 

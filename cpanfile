@@ -1,5 +1,5 @@
 requires 'Mojolicious', '6.0';
-requires 'Minion', '4.0';
+requires 'Minion', '5.03'; # enqueue event
 
 test_requires 'Mojo::SQLite';
 test_requires 'Minion::Backend::SQLite';
