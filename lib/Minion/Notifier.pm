@@ -23,7 +23,7 @@ sub setup_listener {
 
   $self->minion->on(enqueue => sub {
     my ($minion, $id) = @_;
-    $self->emit_event($id, 'enqueue');
+    $self->transport->send($id, 'enqueue');
   });
 
   $self->transport->on(notified => sub {
