@@ -98,14 +98,14 @@ L<Minion::Notifier> inherits all events from L<Mojo::EventEmitter> and emits the
 
 =head2 enqueue
 
-  $notifier->on(finished => sub { my ($notifier, $job_id) = @_; ... });
+  $notifier->on(enqueue => sub { my ($notifier, $job_id) = @_; ... });
 
 Emitted whenever any job is enqueued (typically having a state of "inactive").
 Note that the event is not repeated as an argument, though this is subject to change.
 
 =head2 dequeue
 
-  $notifier->on(finished => sub { my ($notifier, $job_id) = @_; ... });
+  $notifier->on(dequeue => sub { my ($notifier, $job_id) = @_; ... });
 
 Emitted whenever any job is dequeued for processing (typically having a state of "active").
 Note that the event is not repeated as an argument, though this is subject to change.
