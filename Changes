@@ -1,5 +1,8 @@
 Revision history for Perl module Minion::Notifier
 
+0.06 2017-03-06
+  - Fix a bug in the postgres transport
+
 0.05 2016-04-10
   - Emit events related to enqueuing and dequeuing of jobs
   - Bump Minion dependency to 5.03
