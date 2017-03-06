@@ -3,7 +3,7 @@ BEGIN { $ENV{MOJO_REACTOR} = 'Mojo::Reactor::Poll' }
 use Mojolicious::Lite;
 
 use Test::More;
-plan skip_all => 'set TEST_ONLINE to a postgresql url to run test'
+plan skip_all => 'set TEST_ONLINE_PG to a postgresql url to run test'
   unless my $url = $ENV{TEST_ONLINE_PG};
 
 use Test::Mojo;

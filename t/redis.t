@@ -3,7 +3,7 @@ BEGIN { $ENV{MOJO_REACTOR} = 'Mojo::Reactor::Poll' }
 use Mojolicious::Lite;
 
 use Test::More;
-plan skip_all => 'set TEST_ONLINE to a redis url to run test'
+plan skip_all => 'set TEST_ONLINE_REDIS to a redis url to run test'
   unless my $url = $ENV{TEST_ONLINE_REDIS};
 
 use Test::Mojo;
