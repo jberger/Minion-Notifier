@@ -1,3 +1,4 @@
 MANIFEST
 MANIFEST.SKIP.bak
 META.*
+*.swp
