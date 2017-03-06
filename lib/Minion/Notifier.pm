@@ -43,6 +43,7 @@ sub setup_worker {
     my ($worker, $job) = @_;
     my $id = $job->id;
     $self->transport->send($id, 'dequeue');
+    $job->on(start    => sub { $self->transport->_start });
     $job->on(finished => sub { $self->transport->send($id, 'finished') });
     $job->on(failed   => sub { $self->transport->send($id, 'failed') });
   };

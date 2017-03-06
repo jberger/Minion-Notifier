@@ -6,5 +6,7 @@ sub listen { die 'not implemented' }
 
 sub send { die 'not implemented' }
 
+sub _start { }
+
 1;
 

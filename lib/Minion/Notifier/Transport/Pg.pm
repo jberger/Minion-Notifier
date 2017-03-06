@@ -26,5 +26,12 @@ sub send {
   );
 }
 
+sub _start {
+  my $self = shift;
+  # The pubsub object needs to be refreshed.
+  # Currently this is the best way to do that.
+  $self->pg->pubsub->unlisten($self->channel . '_dummy');
+}
+
 1;
 

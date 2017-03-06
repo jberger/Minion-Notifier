@@ -18,7 +18,7 @@ plugin 'Minion::Notifier';
 my $notifier = app->minion_notifier;
 Mojo::IOLoop->one_tick; # ensure that setup_listener is called
 
-$minion->add_task(live => sub { return 1 });
+$minion->add_task(live => sub { shift->finish('done') });
 $minion->add_task(die  => sub { die 'argh' });
 
 my ($id, $job, $worker);
